@@ -167,11 +167,11 @@ In a traditional (non-recurrent) network, applying a different transformation at
 
 $$
 \begin{array}{rcl}
-\text{Step 1: } & h_1 = \tanh\!\left(W^{(1)}_{hh}\, h_0 + W^{(1)}_{xh}\, x_1 + b^{(1)}_h\right) \\
-\text{Step 2: } & h_2 = \tanh\!\left(W^{(2)}_{hh}\, h_1 + W^{(2)}_{xh}\, x_2 + b^{(2)}_h\right) \\
-\text{Step 3: } & h_3 = \tanh\!\left(W^{(3)}_{hh}\, h_2 + W^{(3)}_{xh}\, x_3 + b^{(3)}_h\right) \\
+\text{Step 1: } & h_1 = \tanh\left(W^{(1)}_{hh}\, h_0 + W^{(1)}_{xh}\, x_1 + b^{(1)}_h\right) \\
+\text{Step 2: } & h_2 = \tanh\left(W^{(2)}_{hh}\, h_1 + W^{(2)}_{xh}\, x_2 + b^{(2)}_h\right) \\
+\text{Step 3: } & h_3 = \tanh\left(W^{(3)}_{hh}\, h_2 + W^{(3)}_{xh}\, x_3 + b^{(3)}_h\right) \\
 \vdots & & \\
-\text{Step } T: & h_T = \tanh\!\left(W^{(T)}_{hh}\, h_{T-1} + W^{(T)}_{xh}\, x_T + b^{(T)}_h\right)
+\text{Step } T: & h_T = \tanh\left(W^{(T)}_{hh}\, h_{T-1} + W^{(T)}_{xh}\, x_T + b^{(T)}_h\right)
 \end{array}
 $$
 
@@ -179,11 +179,11 @@ $$
 
 $$
 \begin{array}{rcl}
-\text{Step 1: } & h_1 = \tanh\!\left(W_{hh}\, h_0 + W_{xh}\, x_1 + b_h\right) \\
-\text{Step 2: } & h_2 = \tanh\!\left(W_{hh}\, h_1 + W_{xh}\, x_2 + b_h\right) \\
-\text{Step 3: } & h_3 = \tanh\!\left(W_{hh}\, h_2 + W_{xh}\, x_3 + b_h\right) \\
+\text{Step 1: } & h_1 = \tanh\left(W_{hh}\, h_0 + W_{xh}\, x_1 + b_h\right) \\
+\text{Step 2: } & h_2 = \tanh\left(W_{hh}\, h_1 + W_{xh}\, x_2 + b_h\right) \\
+\text{Step 3: } & h_3 = \tanh\left(W_{hh}\, h_2 + W_{xh}\, x_3 + b_h\right) \\
 \vdots & & \\
-\text{Step } T: & h_T = \tanh\!\left(W_{hh}\, h_{T-1} + W_{xh}\, x_T + b_h\right)
+\text{Step } T: & h_T = \tanh\left(W_{hh}\, h_{T-1} + W_{xh}\, x_T + b_h\right)
 \end{array}
 $$
 
@@ -462,7 +462,7 @@ $$
 $$
 \begin{aligned}
 i_t &= \sigma\!\left(W_i \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_i\right) \\
-\tilde{C}_t &= \tanh\!\left(W_C \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_C\right)
+\tilde{C}_t &= \tanh\left(W_C \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_C\right)
 \end{aligned}
 $$
 
@@ -520,7 +520,7 @@ $$
 \begin{aligned}
 z_t &= \sigma\!\left(W_z \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_z\right) && \text{(update gate)} \\
 r_t &= \sigma\!\left(W_r \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_r\right) && \text{(reset gate)} \\
-\tilde{h}_t &= \tanh\!\left(W \cdot \begin{bmatrix} r_t \odot h_{t-1} \\ x_t \end{bmatrix} + b\right) && \text{(candidate)} \\
+\tilde{h}_t &= \tanh\left(W \cdot \begin{bmatrix} r_t \odot h_{t-1} \\ x_t \end{bmatrix} + b\right) && \text{(candidate)} \\
 h_t &= (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t && \text{(interpolation)}
 \end{aligned}
 $$
