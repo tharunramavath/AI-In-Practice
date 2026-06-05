@@ -447,6 +447,25 @@ A **massive jump** in the wrong direction.
 
 The LSTM, introduced by Hochreiter and Schmidhuber in 1997, solves the vanishing gradient problem with one key insight: **add a separate "memory highway" that information can flow through with minimal transformation.**
 
+![LSTM architecture diagram: at each time step, the input $x_t$ and previous hidden state $h_{t-1}$ flow into three gates — forget, input, and output — which control how information is written to, read from, and cleared from the cell state $C_t$ (the "memory highway" running across the top of the diagram).](LSTM%20Architecture.png)
+
+**Basic intuition of the architecture:**
+
+The LSTM has three pieces working together at every time step:
+
+1. **Cell state $C_t$ (the horizontal line at the top of the diagram)** — the "memory highway" that runs straight through the network with only minor linear interactions. Information can flow along this highway across many time steps with very little transformation, which is exactly what fixes the vanishing-gradient problem. The cell state update is **additive** rather than multiplicative:
+   $$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$$
+   Gradients flow through this addition unchanged (in the worst case), instead of being repeatedly multiplied by a small weight and shrinking to zero.
+
+2. **Three gates (the small $\sigma$ blocks in the diagram)** — sigmoid "valves" whose values are squashed to $[0, 1]$ and act as knobs that decide what information is allowed to flow where:
+   - **Forget gate $f_t$** — what to throw away from $C_t$ (close to 0 means "forget", close to 1 means "keep").
+   - **Input gate $i_t$** — what new information to store in $C_t$ (close to 0 means "ignore", close to 1 means "write").
+   - **Output gate $o_t$** — what to read out from $C_t$ into the hidden state $h_t$ (close to 0 means "suppress", close to 1 means "expose").
+
+3. **Hidden state $h_t$ (the bottom output of the diagram)** — a filtered, "working" view of the cell state. It is used to make the prediction $y_t$ at this time step and is passed to the next time step as $h_{t-1}$ for the next LSTM cell.
+
+> *Think of $C_t$ as the long-term memory and $h_t$ as the working memory.* The cell state carries the entire history of the sequence forward with minimal interference; the hidden state is the *current, gate-filtered* view of that history — shaped by what the gates have decided to expose at this moment.
+
 The LSTM maintains two vectors at each time step:
 - `h_t` = hidden state (short-term, used for output)
 - `C_t` = cell state (long-term memory, the "highway")
