@@ -92,10 +92,10 @@ An RNN processes a sequence **one element at a time**, maintaining a **hidden st
 
 $$
 \begin{array}{rcl}
-\text{Word 1: } x_0 = \text{``I''} & \longrightarrow & h_0 = \tanh\!\left(W_{hh}\, h_{-1} + W_{xh}\, x_0 + b_h\right) \\
-\text{Word 2: } x_1 = \text{``love''} & \longrightarrow & h_1 = \tanh\!\left(W_{hh}\, h_0 + W_{xh}\, x_1 + b_h\right) \\
-\text{Word 3: } x_2 = \text{``machine''} & \longrightarrow & h_2 = \tanh\!\left(W_{hh}\, h_1 + W_{xh}\, x_2 + b_h\right) \\
-\text{Word 4: } x_3 = \text{``learning''} & \longrightarrow & h_3 = \tanh\!\left(W_{hh}\, h_2 + W_{xh}\, x_3 + b_h\right)
+\text{Word 1 (I):} & h_0 = \tanh(W_{hh}\, h_{-1} + W_{xh}\, x_0 + b_h) \\
+\text{Word 2 (love):} & h_1 = \tanh(W_{hh}\, h_0 + W_{xh}\, x_1 + b_h) \\
+\text{Word 3 (machine):} & h_2 = \tanh(W_{hh}\, h_1 + W_{xh}\, x_2 + b_h) \\
+\text{Word 4 (learning):} & h_3 = \tanh(W_{hh}\, h_2 + W_{xh}\, x_3 + b_h)
 \end{array}
 $$
 
@@ -124,7 +124,7 @@ The RNN's behavior is fully specified by two equations. At every time step, the 
 **Core hidden-state equation** — the memory update:
 
 $$
-h_t = \tanh\!\left(W_{hh} \cdot h_{t-1} + W_{xh} \cdot x_t + b_h\right)
+h_t = \tanh\left(W_{hh} \cdot h_{t-1} + W_{xh} \cdot x_t + b_h\right)
 $$
 
 | Symbol | Meaning |
@@ -152,7 +152,7 @@ $$
 
 $$
 \begin{aligned}
-h_t &= \tanh\!\left(W_{hh} \cdot h_{t-1} + W_{xh} \cdot x_t + b_h\right) && \text{(memory update)} \\
+h_t &= \tanh\left(W_{hh} \cdot h_{t-1} + W_{xh} \cdot x_t + b_h\right) && \text{(memory update)} \\
 y_t &= W_{hy} \cdot h_t + b_y && \text{(output from memory)}
 \end{aligned}
 $$
