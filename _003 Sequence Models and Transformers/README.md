@@ -466,56 +466,47 @@ The LSTM has three pieces working together at every time step:
 
 > *Think of $C_t$ as the long-term memory and $h_t$ as the working memory.* The cell state carries the entire history of the sequence forward with minimal interference; the hidden state is the *current, gate-filtered* view of that history — shaped by what the gates have decided to expose at this moment.
 
-The LSTM maintains two vectors at each time step:
-- `h_t` = hidden state (short-term, used for output)
-- `C_t` = cell state (long-term memory, the "highway")
+**How the LSTM works: a step-by-step walkthrough**
 
-Three **gates** control the flow:
+At every time step, the LSTM cell performs four operations. Tracing them against the architecture diagram above makes the flow easy to follow:
 
-**Forget gate** — what to throw away from the cell state:
-$$
-f_t = \sigma\!\left(W_f \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_f\right)
-$$
+1. **Concatenate the inputs.** The previous hidden state $h_{t-1}$ and the new input $x_t$ are concatenated into a single vector $[h_{t-1}, x_t]$. This combined vector is what feeds into all three gates at the same time — they all "see" the same context, but each one is free to act on it differently.
 
-**Input gate** — what new information to store:
-$$
-\begin{aligned}
-i_t &= \sigma\!\left(W_i \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_i\right) \\
-\tilde{C}_t &= \tanh\left(W_C \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_C\right)
-\end{aligned}
-$$
+2. **Compute the three gates in parallel.** Each gate is a small fully-connected layer followed by a non-linearity. The forget, input, and output gates use a sigmoid (squashed to $[0, 1]$), while the candidate cell state $\tilde{C}_t$ uses a $\tanh$ (squashed to $[-1, 1]$):
+   $$
+   \begin{aligned}
+   f_t &= \sigma(W_f \cdot [h_{t-1}, x_t] + b_f) \\
+   i_t &= \sigma(W_i \cdot [h_{t-1}, x_t] + b_i) \\
+   \tilde{C}_t &= \tanh(W_C \cdot [h_{t-1}, x_t] + b_C) \\
+   o_t &= \sigma(W_o \cdot [h_{t-1}, x_t] + b_o)
+   \end{aligned}
+   $$
 
-**Cell state update** — the highway:
-$$
-C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t
-$$
+3. **Update the cell state — the additive highway.** This is the only step that touches long-term memory, and it is the *sum* (not the product) of two terms:
+   $$C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$$
+   - The first term $f_t \odot C_{t-1}$ is the **old memory, selectively kept** — when the forget gate is close to 1, the past is preserved; when it is close to 0, the past is erased.
+   - The second term $i_t \odot \tilde{C}_t$ is the **new memory, selectively written** — when the input gate is close to 1, the candidate is stored; when it is close to 0, the candidate is rejected.
+   - Because the combination is **additive**, the gradient of the loss with respect to $C_{t-k}$ flows through a chain of additions and pointwise multiplications by gate values, rather than being repeatedly multiplied by a weight matrix. This is precisely what stops it from shrinking exponentially across long sequences.
 
-**Output gate** — what to read out from the cell state:
-$$
-\begin{aligned}
-o_t &= \sigma\!\left(W_o \cdot \begin{bmatrix} h_{t-1} \\ x_t \end{bmatrix} + b_o\right) \\
-h_t &= o_t \odot \tanh(C_t)
-\end{aligned}
-$$
+4. **Compute the new hidden state and output.** The output gate decides what slice of the updated cell state becomes the working memory that the next time step and the prediction head will see:
+   $$h_t = o_t \odot \tanh(C_t)$$
+   This $h_t$ is then (a) passed to the next time step as $h_{t-1}$ and (b) used to make the prediction $y_t$ for the current time step.
 
-The $\odot$ symbol is element-wise multiplication. The $\sigma$ is the sigmoid function, which squashes values to $[0, 1]$ — a value of 0 means "let nothing through," 1 means "let everything through."
+> *In one sentence:* at each time step the LSTM decides what to forget, what to write, and what to expose, then updates its cell state with an additive rule and emits a new hidden state.
 
-The cell state update is the magic: $C_t = f_t \odot C_{t-1} + i_t \odot \tilde{C}_t$ is an **additive** update, not a multiplicative one. Gradients flow through addition, which preserves them across long time spans. The forget gate can choose to "let the gradient through" by setting $f_t \approx 1$.
+**Why is it called "Long Short-Term Memory"?**
 
-#### LSTM Gate Flow
+The name is a deliberate, slightly tongue-in-cheek description of the architecture. It points to the fact that the LSTM maintains *two* memories with very different timescales:
 
-$$
-\begin{array}{rcl}
-x_t,\; h_{t-1} & \xrightarrow{\text{concat}} & 
-\underbrace{\begin{array}{c} f_t \;=\; \sigma(\cdot) \\ i_t \;=\; \sigma(\cdot) \\ \tilde{C}_t \;=\; \tanh(\cdot) \end{array}}_{\text{three gates from }[x_t, h_{t-1}]} \\[1.2em]
-& & \downarrow\;\times \\[0.3em]
-C_{t-1} & \xrightarrow{\;\;\times\;f_t\;\;} & 
-\underbrace{C_t \;=\; f_t \odot C_{t-1} \;+\; i_t \odot \tilde{C}_t}_{\text{cell state update}} 
-\;\xrightarrow{\;\tanh\;}\; 
-\underbrace{h_t \;=\; o_t \odot \tanh(C_t)}_{\text{hidden state output}} \\[0.6em]
-& & o_t \;\xleftarrow{\;\;\sigma(\cdot)\;\;}\; [x_t, h_{t-1}]
-\end{array}
-$$
+- **Long-term memory — the cell state $C_t$.** This is the horizontal line at the top of the architecture diagram. It is designed to carry information across *hundreds* of time steps with very little interference. If the forget and input gates cooperate — $f_t \approx 1$ and $i_t \approx 0$ — the cell state copies itself forward almost unchanged, so information can be retained for as long as the gates keep it open. That is the **"long"** in the name.
+
+- **Short-term memory — the hidden state $h_t$.** This is the bottom output of the architecture diagram. It is fully recomputed at every time step and is shaped by whatever the output gate chose to expose from $C_t$ right now. It changes as fast as the input does. That is the **"short"** in the name.
+
+The word **"Memory"** is the punchline. Earlier recurrent models (the plain RNN) had only *one* state vector, and it had to do double duty — act as the carrier of long-range context *and* as the working memory for the current prediction. Those two roles are in tension: a vector cannot both faithfully preserve the past and react sharply to the present. The LSTM resolves the tension by giving each role its own vector and letting three learned gates mediate between them.
+
+> *Why "long short-term" and not just "two memories"?* In the original 1997 paper, Hochreiter and Schmidhuber framed the cell state as the *long-term* component (because of its additive update and gate-controlled retention) and the hidden state as the *short-term* component (because it is recomputed at every step). The name was chosen to emphasize that the architecture explicitly models *both* timescales — something earlier recurrent networks simply could not do.
+
+> *A useful mental model:* think of $C_t$ as a notebook you keep on your desk and $h_t$ as the one page of that notebook you are actively reading. The **forget gate** decides which lines to erase, the **input gate** decides which new lines to write, and the **output gate** decides which lines on the current page to actually look at right now.
 
 #### Worked Example: Pronoun Resolution
 
